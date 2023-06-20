@@ -14,12 +14,12 @@
       border: 1px solid black;
     }
    
-    td.wall {                                                     /* If cell belongs to block, then color it with Fuchsia */
+    td.wall {                                                     /* If cell belongs to wall block, then color it with Fuchsia */
       background-color: Fuchsia;                                        
     }
    
     td.water {
-      background-color: Yellow;                                    /* If cell belongs to water, then color it with Yellow */
+      background-color: Yellow;                                    /* If cell belongs to water block, then color it with Yellow */
     }
     
     .table-container {                                                  
@@ -95,14 +95,14 @@
       var b = [];
         
       function check(i) {
-        for (var j = i + 1; j < blockHeights.length; j++) {
+        for (var j = i + 1; j < blockHeights.length; j++) {           //Finding next closest wall to the right
           if (blockHeights[j] !== 0) {
             return blockHeights[j];
           }
         }
       }
         
-      for (var i = 0; i < blockHeights.length; i++) {                               //Here we calculate how block water stored in each block
+      for (var i = 0; i < blockHeights.length; i++) {                               //Here we calculate how block of water stored in each block
         if (c[0] > i || i > c[1]) {
           b.push(0);
         } else if (blockHeights[i] !== 0 && i !== blockHeights.length - 1) {
@@ -115,7 +115,7 @@
           if (g < f) {
             b.push(g);
           } else {
-            b.push(f);                                                            //Array 'b' gives blocks of water stored
+            b.push(f);                                                            //Array 'b' gives blocks of water stored in each block.
           }
         }
       }
