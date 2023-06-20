@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    table {
+      border-collapse: collapse;                                  /* CSS styling for table  */
+      margin: auto;                                              
+    }
+  
+   
+    td {                                                                
+      width: 80px;
+      height: 30px;                                                /* set the parameter for each cell */
+      border: 1px solid black;
+    }
+   
+    td.wall {                                                     /* If cell belongs to block, then color it with Fuchsia */
+      background-color: Fuchsia;                                        
+    }
+   
+    td.water {
+      background-color: Yellow;                                    /* If cell belongs to water, then color it with Yellow */
+    }
+    
+    .table-container {                                                  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 100px;
+    }
+  </style>
+</head>
+    
+<body>
+  <h1>Calculating water stored between blocks</h1>
+  <h3 id="po">Enter Blocks Height separated by comma(,)</h3>
+    
+  <form id="buildingHeightForm">
+    <input type="text" name="inputArray" value="" /><br>                                         <!-- takes the input --> 
+    <button type="button" name="button" onclick="calculateWaterAndGenerateTables()">            
+      Submit
+    </button>
+  </form>
+
+  <div id="output"></div>
+  <div class="table-container">
+    <table id="buildingTable"></table>                                            
+    <table id="waterTable"></table>
+  </div>
+
+  <script>
+    function generateTable(rows, columns, blockHeights, b, tableId, k) {
+      var table = document.getElementById(tableId);
+      table.innerHTML = "";                                                                   // Clear any existing table content
+        
+      for (var i = 0; i < rows; i++) {
+        var row = document.createElement("tr");
+        for (var j = 0; j < columns; j++) {
+          var cell = document.createElement("td");
+          if (blockHeights[j] !== 0 && i >= rows - blockHeights[j] && k === 0) {
+            cell.classList.add("wall");                                            // If cell belongs wall block then use CSS styling coloring with respect to it.
+          } else if (b[j] !== 0 && i >= rows - b[j]) {
+            cell.classList.add("water");                                           // If cell belongs water then use CSS styling coloring with respect to it.
+          }
+          row.appendChild(cell);                                                  //add each cell to the respected row
+        }
+        table.appendChild(row);                                                   //append entire row of cells to the already existing rows of cell.
+      }
+    }
+
+
+    function calculateWaterAndGenerateTables() {                                                      //fucntion to calculate water contained.
+      var inputArray = document.getElementById("buildingHeightForm").elements["inputArray"].value;       //input values
+      var blockHeights = inputArray.split(",").map(Number);                                               //split values using delimiter comma
+      var output = document.getElementById("output");
+        
+      var firstNonZeroIndex = -1;                        //initially index of first wall is -1
+      var lastNonZeroIndex = -1;                          //initially index of last wall is -1
+        
+      for (var i = 0; i < blockHeights.length; i++) {
+        if (blockHeights[i] !== 0) {
+          firstNonZeroIndex = i;                         //finding index of first wall
+          break;
+        }
+      }
+       
+      for (var i = blockHeights.length - 1; i >= 0; i--) {
+        if (blockHeights[i] !== 0) {
+          lastNonZeroIndex = i;                                   //finding index of last wall
+          break;
+        }
+      }
+        
+      var c = [firstNonZeroIndex, lastNonZeroIndex];
+      var b = [];
+        
+      function check(i) {
+        for (var j = i + 1; j < blockHeights.length; j++) {
+          if (blockHeights[j] !== 0) {
+            return blockHeights[j];
+          }
+        }
+      }
+        
+      for (var i = 0; i < blockHeights.length; i++) {                               //Here we calculate how block water stored in each block
+        if (c[0] > i || i > c[1]) {
+          b.push(0);
+        } else if (blockHeights[i] !== 0 && i !== blockHeights.length - 1) {
+          b.push(0);
+          var g = blockHeights[i];
+          var f = check(i);
+        } else if (i === blockHeights.length - 1) {
+          b.push(0);
+        } else if (blockHeights[i] === 0) {
+          if (g < f) {
+            b.push(g);
+          } else {
+            b.push(f);                                                            //Array 'b' gives blocks of water stored
+          }
+        }
+      }
+      
+      const waterStored = b.reduce((accumulator, currentValue) => accumulator + currentValue, 0);   //calculate total water stored by summing all values of Array 'b'
+
+      output.innerHTML = "Water stored between blocks: " + waterStored + " units";                  //Print the results
+
+      var columns = blockHeights.length; 
+      var rows = Math.max(...blockHeights); 
+      generateTable(rows, columns, blockHeights, b, "buildingTable", 0);               //generate table, if we pass 0 at the end means both wall blocks and water blocks will be constructed
+      generateTable(rows, columns, blockHeights, b, "waterTable", 1);                   //generate table, if we pass 1 at the end means only water blocks will be constructed
+    }
+  </script>
+    
+</body>
+</html>
