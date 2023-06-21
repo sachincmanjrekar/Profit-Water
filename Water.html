@@ -24,9 +24,9 @@
     
     .table-container {                                                  
       display: flex;
-      flex-direction: column;
+      flex-direction: column;                //To display table one below another we use flex-direction as column, or if we want rowwise then set it as row
       align-items: center;
-      gap: 100px;
+      gap: 70px;                            //Gap between two tables
     }
   </style>
 </head>
@@ -37,15 +37,15 @@
     
   <form id="buildingHeightForm">
     <input type="text" name="inputArray" value="" /><br>                                         <!-- takes the input --> 
-    <button type="button" name="button" onclick="calculateWaterAndGenerateTables()">            
+    <button type="button" name="button" onclick="calculateWaterAndGenerateTables()">            <!-- add the button-->
       Submit
     </button>
   </form>
 
   <div id="output"></div>
   <div class="table-container">
-    <table id="buildingTable"></table>                                            
-    <table id="waterTable"></table>
+    <table id="buildingTable"></table>                          <!-- Table id for Table that consists both wall blocks and water    -->                                    
+    <table id="waterTable"></table>								<!-- Table id for Table that consists only water      --> 
   </div>
 
   <script>
@@ -57,10 +57,10 @@
         var row = document.createElement("tr");
         for (var j = 0; j < columns; j++) {
           var cell = document.createElement("td");
-          if (blockHeights[j] !== 0 && i >= rows - blockHeights[j] && k === 0) {
-            cell.classList.add("wall");                                            // If cell belongs wall block then use CSS styling coloring with respect to it.
+          if (blockHeights[j] !== 0 && i >= rows - blockHeights[j] && k === 0) {   //if k==0, then only it build wall blocks.
+            cell.classList.add("wall");                                            // If cell belongs wall block then use CSS styling coloring(Yellow) with respect to it.
           } else if (b[j] !== 0 && i >= rows - b[j]) {
-            cell.classList.add("water");                                           // If cell belongs water then use CSS styling coloring with respect to it.
+            cell.classList.add("water");                                           // If cell belongs water then use CSS styling coloring(Fuchsia) with respect to it.
           }
           row.appendChild(cell);                                                  //add each cell to the respected row
         }
@@ -72,63 +72,87 @@
     function calculateWaterAndGenerateTables() {                                                      //fucntion to calculate water contained.
       var inputArray = document.getElementById("buildingHeightForm").elements["inputArray"].value;       //input values
       var blockHeights = inputArray.split(",").map(Number);                                               //split values using delimiter comma
+	  
+	                                                                             // Check if any element in blockHeights is neither positive integer nor zero
+      var invalidInput = blockHeights.some(function(height) {
+      return isNaN(height) || height < 0 || !Number.isInteger(height);
+      });
+
+     if (invalidInput) {                                                         //If it is invalid input then prompt the message.
+      alert("Please Enter Positive Integers and Zeros only .");
+	  var output = document.getElementById("output");
+	  output.innerHTML = "Give valid input " ;
+	  generateTable(0, 0, blockHeights, blockHeights, "buildingTable", 0);               //Previous table if existed will be removed, No new table will be built.
+      generateTable(0, 0, blockHeights, blockHeights, "waterTable", 1);  
+	  
+       }
+	   else
+	  {
       var output = document.getElementById("output");
-        
-      var firstNonZeroIndex = -1;                        //initially index of first wall is -1
-      var lastNonZeroIndex = -1;                          //initially index of last wall is -1
+      
+      var firstWallIndex = -1;                        //initially index of first wall is -1
+      var lastWallIndex = -1;                          //initially index of last wall is -1
         
       for (var i = 0; i < blockHeights.length; i++) {
         if (blockHeights[i] !== 0) {
-          firstNonZeroIndex = i;                         //finding index of first wall
+          firstWallIndex = i;                         //finding index of first wall
           break;
         }
       }
        
       for (var i = blockHeights.length - 1; i >= 0; i--) {
         if (blockHeights[i] !== 0) {
-          lastNonZeroIndex = i;                                   //finding index of last wall
+          lastWallIndex = i;                                   //finding index of last wall
           break;
         }
       }
         
-      var c = [firstNonZeroIndex, lastNonZeroIndex];
-      var b = [];
+      var c = [firstWallIndex, lastWallIndex];
+      var b = [];                                                     //Array 'b' created to get all the water content that can be stored in each block.
         
       function check(i) {
         for (var j = i + 1; j < blockHeights.length; j++) {           //Function to Find next closest wall to the right
           if (blockHeights[j] !== 0) {
-            return blockHeights[j];
+            return blockHeights[j];                                     //It will return height of next closest wall to the right
           }
         }
       }
         
-      for (var i = 0; i < blockHeights.length; i++) {                               //Here we calculate how much block of water stored in each block
-        if (c[0] > i || i > c[1]) {
-          b.push(0);
-        } else if (blockHeights[i] !== 0 && i !== blockHeights.length - 1) {
-          b.push(0);
-          var g = blockHeights[i];
-          var f = check(i);
-        } else if (i === blockHeights.length - 1) {
-          b.push(0);
-        } else if (blockHeights[i] === 0) {
-          if (g < f) {
-            b.push(g);
-          } else {                                                                 //for input [0,2,3,0,7,0]  array 'b' will be [0,0,0,3,0,0]
-            b.push(f);                                                            //Array 'b' gives water stored in each block.
+      for (var i = 0; i < blockHeights.length; i++) {                               //Here we calculate how much water stored in each block
+        if (c[0] > i || i > c[1]) {                                                  
+          b.push(0);                                                            //We push 'zero' to Array 'b' for the empty values which encounter before first wall and after last wall.
+        } else if (blockHeights[i] !== 0 && i !== blockHeights.length - 1) {    
+          b.push(0);                                                            //When we encounter wall block then also we push 'zero' to array 'b' since no water can be stored in wall block.
+          var g = blockHeights[i];                                              //variable 'g' stores the value of 'current encountered wall block'(non zero)
+          var f = check(i);                                                     //we then find next immediate wall(by using function check() ) that exist at right hand side of the 'current encountered wall block' and store it in  variable 'f'.
+
+        } else if (blockHeights[i] === 0) {                                      //If we reached here to this 'if condition' loop means, current block is zero(non wall block) and there 'exist wall blocks' to both left and right of this 'zero block value'
+          if (g < f) {                                                           //we check smaller of this 'two wall'(one on right side and another on left side)
+            b.push(g);                                                           //then we push smaller value of between these 'two walls' to array 'b' since only those much water can be contained.
+          } else {
+            b.push(f);                                                            
           }
-        }
+        }  else if (i === blockHeights.length - 1) {                             //If we reach here means we reached end of the input array, here no water can be stored. So push 'zero'
+          b.push(0);
+		}                                                                       //At the end for input array [0,2,3,0,0,5,0] the array 'b' will be [0,0,0,3,3,0,0]
+		
+		
       }
       
-      const waterStored = b.reduce((accumulator, currentValue) => accumulator + currentValue, 0);   //calculate total water stored by summing all values of Array 'b'
+      const waterStored = b.reduce((accumulator, currentValue) => accumulator + currentValue, 0);   //calculate total water stored by summing up all values of Array 'b'
 
-      output.innerHTML = "Water stored between blocks: " + waterStored + " units";                  //Print the results
-
-      var columns = blockHeights.length; 
-      var rows = Math.max(...blockHeights); 
+      output.innerHTML = "Total Water stored among all Wall blocks: " + waterStored + " units";                  //Print the results
+      
+      var columns = blockHeights.length;                                             //variable 'columns' store length of the array that is total number of block.
+      var rows = Math.max(...blockHeights)+1;                                          //varaible 'rows' store maximum heigt among all walls +1
+	  
       generateTable(rows, columns, blockHeights, b, "buildingTable", 0);               //generate table, if we pass 0 at the end means both wall blocks and water blocks will be constructed
       generateTable(rows, columns, blockHeights, b, "waterTable", 1);                   //generate table, if we pass 1 at the end means only water blocks will be constructed
+    
     }
+	
+	}
+	
   </script>
     
 </body>
