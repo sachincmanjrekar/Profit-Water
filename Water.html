@@ -150,7 +150,7 @@
       output.innerHTML = "Total Water stored among all Wall blocks: " + waterStored + " units";                  //Print the results
       
       var columns = blockHeights.length;                                             //variable 'columns' store length of the array that is total number of block.
-      var rows = Math.max(...blockHeights);                                          //varaible 'rows' store maximum heigt among all walls +1
+      var rows = Math.max(...blockHeights)+1;                                          //varaible 'rows' store maximum heigt among all walls +1
 	  
       generateTable(rows, columns, blockHeights, b, "buildingTable", 0);               //generate table, if we pass 0 at the end means both wall blocks and water blocks will be constructed
       generateTable(rows, columns, blockHeights, b, "waterTable", 1);                   //generate table, if we pass 1 at the end means only water blocks will be constructed
